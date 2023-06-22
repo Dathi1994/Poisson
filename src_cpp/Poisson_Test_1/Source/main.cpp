@@ -94,16 +94,20 @@ void main_main ()
     DistributionMapping dm(ba);
 
     // we allocate two phi multifabs; one will store the old state, the other the new.
-    MultiFab phi_old(ba, dm, Ncomp, Nghost);
-    MultiFab phi_new(ba, dm, Ncomp, Nghost);
+    //MultiFab phi_old(ba, dm, Ncomp, Nghost);
+    //MultiFab phi_new(ba, dm, Ncomp, Nghost);
+     MultiFab phi_initial(ba, dm, Ncomp, Nghost);
+     MultiFab rhs_ptr(ba, dm, Ncomp, Nghost);
+     MultiFab phi_exact(ba, dm, Ncomp, Nghost);
+
 
     GpuArray<Real, AMREX_SPACEDIM> dx = geom.CellSizeArray();
 
-    init_phi(phi_new, geom);
+    actual_init_phi(rhs_ptr, phi_exact, phi_initial, geom);
 
     // Set up BCRec; see Src/Base/AMReX_BC_TYPES.H for supported types
-    Vector<BCRec> bc(phi_old.nComp());
-    for (int n = 0; n < phi_old.nComp(); ++n)
+    Vector<BCRec> bc(phi_initial.nComp());
+    for (int n = 0; n < phi_initial.nComp(); ++n)
     {
         for (int idim = 0; idim < AMREX_SPACEDIM; ++idim)
         {
@@ -149,33 +153,37 @@ void main_main ()
     Real dt = imFactor*cfl/(2.0*coeff);
 
     // Write a plotfile of the initial data if plot_int > 0 (plot_int was defined in the inputs file)
-    if (plot_int > 0)
-    {
-        int n = 0;
-        const std::string& pltfile = amrex::Concatenate("plt",n,5);
-        WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, 0);
-    }
 
 
-    for (int n = 1; n <= nsteps; ++n)
-    {
+
+   // for (int n = 1; n <= nsteps; ++n)
+   // {
         // copying new solution into the old
-        MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
+        //MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
+	MultiFab::Copy(phi_initial, rhs_ptr, 0, 0, 1, 0);
 
         // new_phi = (I-dt)^{-1} * old_phi + dt
-        advance(phi_old, phi_new, dt, geom, ba, dm, bc);
-        time = time + dt;
+        //advance(phi_old, phi_new, dt, geom, ba, dm, bc);
+	advance(phi_initial, rhs_ptr, phi_exact, geom, ba, dm, bc);
+        //time = time + dt;
 
         // Tell the I/O Processor to write out which step we're doing
-        amrex::Print() << "Advanced step " << n << "\n";
+       // amrex::Print() << "Advanced step " << n << "\n";
+
+	MultiFab plt(ba, dm, 3, 0);
+
+	MultiFab::Copy(plt, phi_initial, 0, 0, 1, 0);
+        MultiFab::Copy(plt, phi_exact, 0, 1, 1, 0);
+        MultiFab::Copy(plt, rhs_ptr, 0, 2, 1, 0);
 
         // Write a plotfile of the current data (plot_int was defined in the inputs file)
-        if (plot_int > 0 && n%plot_int == 0)
-        {
-            const std::string& pltfile = amrex::Concatenate("plt",n,5);
-            WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, n);
-        }
-    }
+        //if (plot_int > 0 && n%plot_int == 0)
+        //{
+            const std::string& pltfile = "plt";
+            //WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, n);
+            WriteSingleLevelPlotfile(pltfile, plt, {"phi_initial", "phi_exact", "rhs_ptr"}, geom, 0., 0);
+        //}
+   
 
     // Call the timer again and compute the maximum difference between the start time and stop time
     //   over all processors
