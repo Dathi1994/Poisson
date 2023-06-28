@@ -7,12 +7,9 @@
 
 using namespace amrex;
 
-void advance (//MultiFab& phi_old,
-              //MultiFab& phi_new,
-	      amrex::MultiFab& phi_initial,
+void advance (amrex::MultiFab& phi_solution,
 	      amrex::MultiFab& rhs_ptr,
 	      amrex::MultiFab& phi_exact,
-              //Real dt,
               const Geometry& geom,
               const BoxArray& grids,
               const DistributionMapping& dmap,
@@ -23,20 +20,17 @@ void advance (//MultiFab& phi_old,
 
       (ascalar*acoef - bscalar div bcoef grad) phi = RHS
 
-      for an implicit discretization of the heat equation
+      for an implicit discretization of the poisson equation
 
-      (I - div dt grad) phi^{n+1} = phi^n
      */
 
 
     // Fill the ghost cells of each grid from the other grids
     // includes periodic domain boundaries
-   // phi_old.FillBoundary(geom.periodicity());
-      phi_initial.FillBoundary(geom.periodicity());
+    phi_solution.FillBoundary(geom.periodicity());
 
     // Fill non-periodic physical boundaries
-    //FillDomainBoundary(phi_old, geom, bc);
-    FillDomainBoundary(phi_initial, geom, bc);
+    FillDomainBoundary(phi_solution, geom, bc);
 
     // assorment of solver and parallization options and parameters
     // see AMReX_MLLinOp.H for the defaults, accessors, and mutators
@@ -54,7 +48,7 @@ void advance (//MultiFab& phi_old,
     std::array<LinOpBCType,AMREX_SPACEDIM> bc_lo;
     std::array<LinOpBCType,AMREX_SPACEDIM> bc_hi;
 
-    for (int n = 0; n < phi_initial.nComp(); ++n)
+    for (int n = 0; n < phi_solution.nComp(); ++n)
     {
         for (int idim = 0; idim < AMREX_SPACEDIM; ++idim)
         {
@@ -92,13 +86,10 @@ void advance (//MultiFab& phi_old,
     mlabec.setDomainBC(bc_lo, bc_hi);
 
     // set the boundary conditions
-    //mlabec.setLevelBC(0, &phi_old);
-    mlabec.setLevelBC(0, &phi_initial);
+    mlabec.setLevelBC(0, &phi_solution);
 
     // scaling factors
-   // Real ascalar = 1.0;
     Real ascalar = 0.0;
-   // Real bscalar = 1.0;
     Real bscalar = -1.0;
     mlabec.setScalars(ascalar, bscalar);
 
@@ -108,8 +99,6 @@ void advance (//MultiFab& phi_old,
     // fill in the acoef MultiFab and load this into the solver
     acoef.setVal(1.0);
     mlabec.setACoeffs(0, acoef);
-   // bcoef.setVal(1.0);
-   // mlabec.setBCoeffs(0, bcoef);
 
 
     // bcoef lives on faces so we make an array of face-centered MultiFabs
@@ -125,26 +114,11 @@ void advance (//MultiFab& phi_old,
     mlabec.setBCoeffs(0, amrex::GetArrOfConstPtrs(face_bcoef));
 
 
-    // build an MLMG solver
-   // MLMG mlmg(mlabec);
-
-    // set solver parameters
-    //int max_iter = 100;
-    //mlmg.setMaxIter(max_iter);
-    //int max_fmg_iter = 0;
-    //mlmg.setMaxFmgIter(max_fmg_iter);
-    //int verbose = 2;
-    //mlmg.setVerbose(verbose);
-    //int bottom_verbose = 0;
-    //mlmg.setBottomVerbose(bottom_verbose);
-
     // relative and absolute tolerances for linear solve
     const Real tol_rel = 1.e-10;
     const Real tol_abs = 0.0;
 
     // Solve linear system
-   // mlmg.solve({&phi_new}, {&phi_old}, tol_rel, tol_abs);
-      //Real solve({&phi_initial}, {&rhs_ptr}, tol_rel, tol_abs);
-      Real solve(amrex::MultiFab& phi_initial, amrex::MultiFab& rhs_ptr, Real tol_rel, Real tol_abs);
+    Real solve (Vector<MultiFab*>& phi_solution, Vector<MultiFab*>& rhs_ptr, Real tol_rel, Real tol_abs);
 }
 

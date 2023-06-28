@@ -93,21 +93,19 @@ void main_main ()
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
 
-    // we allocate two phi multifabs; one will store the old state, the other the new.
-    //MultiFab phi_old(ba, dm, Ncomp, Nghost);
-    //MultiFab phi_new(ba, dm, Ncomp, Nghost);
-     MultiFab phi_initial(ba, dm, Ncomp, Nghost);
-     MultiFab rhs_ptr(ba, dm, Ncomp, Nghost);
-     MultiFab phi_exact(ba, dm, Ncomp, Nghost);
+    // we allocate the three multifabs, one will store the solution, the other two are the exact solution and the random rhs
+    MultiFab phi_solution(ba, dm, Ncomp, Nghost);
+    MultiFab rhs_ptr(ba, dm, Ncomp, 0);
+    MultiFab phi_exact(ba, dm, Ncomp, 0);
 
 
     GpuArray<Real, AMREX_SPACEDIM> dx = geom.CellSizeArray();
 
-    actual_init_phi(rhs_ptr, phi_exact, phi_initial, geom);
+    actual_init_phi(rhs_ptr, phi_exact, phi_solution, geom);
 
     // Set up BCRec; see Src/Base/AMReX_BC_TYPES.H for supported types
-    Vector<BCRec> bc(phi_initial.nComp());
-    for (int n = 0; n < phi_initial.nComp(); ++n)
+    Vector<BCRec> bc(phi_solution.nComp());
+    for (int n = 0; n < phi_solution.nComp(); ++n)
     {
         for (int idim = 0; idim < AMREX_SPACEDIM; ++idim)
         {
@@ -143,46 +141,24 @@ void main_main ()
         }
     }
 
-    // Compute the time step
-    // Implicit time step is imFactor*(explicit time step)
-    Real cfl = 0.9;
-    Real coeff = AMREX_D_TERM(   1./(dx[0]*dx[0]),
-                               + 1./(dx[1]*dx[1]),
-                               + 1./(dx[2]*dx[2]) );
-    const int imFactor = pow(10, AMREX_SPACEDIM-1);
-    Real dt = imFactor*cfl/(2.0*coeff);
 
-    // Write a plotfile of the initial data if plot_int > 0 (plot_int was defined in the inputs file)
+        // copying exact solution to the solution
+	MultiFab::Copy(phi_solution, phi_exact, 0, 0, 1, 0);
 
+         
+	advance(phi_solution, rhs_ptr, phi_exact, geom, ba, dm, bc);
 
-
-   // for (int n = 1; n <= nsteps; ++n)
-   // {
-        // copying new solution into the old
-        //MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
-	MultiFab::Copy(phi_initial, rhs_ptr, 0, 0, 1, 0);
-
-        // new_phi = (I-dt)^{-1} * old_phi + dt
-        //advance(phi_old, phi_new, dt, geom, ba, dm, bc);
-	advance(phi_initial, rhs_ptr, phi_exact, geom, ba, dm, bc);
-        //time = time + dt;
-
-        // Tell the I/O Processor to write out which step we're doing
-       // amrex::Print() << "Advanced step " << n << "\n";
-
+        // create multifab plt which has all the three components
 	MultiFab plt(ba, dm, 3, 0);
 
-	MultiFab::Copy(plt, phi_initial, 0, 0, 1, 0);
+        // copy the solution, exact solution and the rhs into the plt
+	MultiFab::Copy(plt, phi_solution, 0, 0, 1, 0);
         MultiFab::Copy(plt, phi_exact, 0, 1, 1, 0);
         MultiFab::Copy(plt, rhs_ptr, 0, 2, 1, 0);
 
-        // Write a plotfile of the current data (plot_int was defined in the inputs file)
-        //if (plot_int > 0 && n%plot_int == 0)
-        //{
-            const std::string& pltfile = "plt";
-            //WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, n);
-            WriteSingleLevelPlotfile(pltfile, plt, {"phi_initial", "phi_exact", "rhs_ptr"}, geom, 0., 0);
-        //}
+
+        const std::string& pltfile = "plt";
+        WriteSingleLevelPlotfile(pltfile, plt, {"phi_solution", "phi_exact", "rhs_ptr"}, geom, 0., 0);
    
 
     // Call the timer again and compute the maximum difference between the start time and stop time
