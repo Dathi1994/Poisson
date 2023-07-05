@@ -113,12 +113,25 @@ void advance (amrex::MultiFab& phi_solution,
     }
     mlabec.setBCoeffs(0, amrex::GetArrOfConstPtrs(face_bcoef));
 
+        // build an MLMG solver
+    MLMG mlmg(mlabec);
+
+    // set solver parameters
+    int max_iter = 100;
+    mlmg.setMaxIter(max_iter);
+    int max_fmg_iter = 0;
+    mlmg.setMaxFmgIter(max_fmg_iter);
+    int verbose = 2;
+    mlmg.setVerbose(verbose);
+    int bottom_verbose = 0;
+    mlmg.setBottomVerbose(bottom_verbose);
 
     // relative and absolute tolerances for linear solve
     const Real tol_rel = 1.e-10;
     const Real tol_abs = 0.0;
 
     // Solve linear system
-    Real solve (Vector<MultiFab*>& phi_solution, Vector<MultiFab*>& rhs_ptr, Real tol_rel, Real tol_abs);
+    //Real solve (Vector<MultiFab*>& phi_solution, Vector<MultiFab*>& rhs_ptr, Real tol_rel, Real tol_abs);
+    mlmg.solve({&phi_solution}, {&rhs_ptr}, tol_rel, tol_abs);
 }
 

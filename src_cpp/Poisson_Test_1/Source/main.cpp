@@ -143,22 +143,32 @@ void main_main ()
 
 
         // copying exact solution to the solution
-	MultiFab::Copy(phi_solution, phi_exact, 0, 0, 1, 0);
+	//MultiFab::Copy(phi_solution, phi_exact, 0, 0, 1, 0);
 
          
 	advance(phi_solution, rhs_ptr, phi_exact, geom, ba, dm, bc);
 
         // create multifab plt which has all the three components
-	MultiFab plt(ba, dm, 3, 0);
+	MultiFab plt(ba, dm, 5, 0);
+	
 
         // copy the solution, exact solution and the rhs into the plt
 	MultiFab::Copy(plt, phi_solution, 0, 0, 1, 0);
         MultiFab::Copy(plt, phi_exact, 0, 1, 1, 0);
         MultiFab::Copy(plt, rhs_ptr, 0, 2, 1, 0);
 
+	
+	MultiFab::Copy(plt, phi_exact, 0, 3 ,1 ,0);
+	MultiFab::Subtract(plt,phi_solution,0,3,1,0);
+
+	MultiFab::Copy(plt,phi_solution, 0, 4, 1, 0);
+	MultiFab::Subtract(plt,rhs_ptr,0,4,1,0);
+	
+	
+
 
         const std::string& pltfile = "plt";
-        WriteSingleLevelPlotfile(pltfile, plt, {"phi_solution", "phi_exact", "rhs_ptr"}, geom, 0., 0);
+        WriteSingleLevelPlotfile(pltfile, plt, {"phi_solution", "phi_exact", "rhs_ptr", "diff", "residual"}, geom, 0., 0);
    
 
     // Call the timer again and compute the maximum difference between the start time and stop time
