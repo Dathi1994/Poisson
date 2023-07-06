@@ -20,10 +20,9 @@ void advance (amrex::MultiFab& phi_solution,
 
       (ascalar*acoef - bscalar div bcoef grad) phi = RHS
 
-      for an implicit discretization of the poisson equation
+      to solve the Poisson equation: div grad phi = RHS
 
      */
-
 
     // Fill the ghost cells of each grid from the other grids
     // includes periodic domain boundaries
@@ -100,7 +99,6 @@ void advance (amrex::MultiFab& phi_solution,
     acoef.setVal(1.0);
     mlabec.setACoeffs(0, acoef);
 
-
     // bcoef lives on faces so we make an array of face-centered MultiFabs
     // then we will in face_bcoef MultiFabs and load them into the solver.
     std::array<MultiFab,AMREX_SPACEDIM> face_bcoef;
@@ -113,7 +111,7 @@ void advance (amrex::MultiFab& phi_solution,
     }
     mlabec.setBCoeffs(0, amrex::GetArrOfConstPtrs(face_bcoef));
 
-        // build an MLMG solver
+    // build an MLMG solver
     MLMG mlmg(mlabec);
 
     // set solver parameters
@@ -131,7 +129,6 @@ void advance (amrex::MultiFab& phi_solution,
     const Real tol_abs = 0.0;
 
     // Solve linear system
-    //Real solve (Vector<MultiFab*>& phi_solution, Vector<MultiFab*>& rhs_ptr, Real tol_rel, Real tol_abs);
     mlmg.solve({&phi_solution}, {&rhs_ptr}, tol_rel, tol_abs);
 }
 

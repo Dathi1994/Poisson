@@ -22,7 +22,7 @@ void main_main ()
     auto strt_time = amrex::second();
 
     // AMREX_SPACEDIM: number of dimensions
-    int n_cell, max_grid_size, nsteps, plot_int;
+    int n_cell, max_grid_size;
     Vector<int> bc_lo(AMREX_SPACEDIM,0);
     Vector<int> bc_hi(AMREX_SPACEDIM,0);
 
@@ -37,15 +37,6 @@ void main_main ()
 
         // The domain is broken into boxes of size max_grid_size
         pp.get("max_grid_size",max_grid_size);
-
-        // Default plot_int to -1, allow us to set it to something else in the inputs file
-        //  If plot_int < 0 then no plot files will be writtenq
-        plot_int = -1;
-        pp.query("plot_int",plot_int);
-
-        // Default nsteps to 0, allow us to set it to something else in the inputs file
-        nsteps = 10;
-        pp.query("nsteps",nsteps);
 
         // read in BC; see Src/Base/AMReX_BC_TYPES.H for supported types
         pp.queryarr("bc_lo", bc_lo);
@@ -98,7 +89,6 @@ void main_main ()
     MultiFab rhs_ptr(ba, dm, Ncomp, 0);
     MultiFab phi_exact(ba, dm, Ncomp, 0);
 
-
     GpuArray<Real, AMREX_SPACEDIM> dx = geom.CellSizeArray();
 
     actual_init_phi(rhs_ptr, phi_exact, phi_solution, geom);
@@ -140,36 +130,23 @@ void main_main ()
 
         }
     }
-
-
-        // copying exact solution to the solution
-	//MultiFab::Copy(phi_solution, phi_exact, 0, 0, 1, 0);
-
          
-	advance(phi_solution, rhs_ptr, phi_exact, geom, ba, dm, bc);
+    advance(phi_solution, rhs_ptr, phi_exact, geom, ba, dm, bc);
 
-        // create multifab plt which has all the three components
-	MultiFab plt(ba, dm, 5, 0);
-	
+    // create multifab plt which has all the three components
+    MultiFab plt(ba, dm, 4, 0);
 
-        // copy the solution, exact solution and the rhs into the plt
-	MultiFab::Copy(plt, phi_solution, 0, 0, 1, 0);
-        MultiFab::Copy(plt, phi_exact, 0, 1, 1, 0);
-        MultiFab::Copy(plt, rhs_ptr, 0, 2, 1, 0);
+    // copy the solution, exact solution and the rhs into the plt
+    MultiFab::Copy(plt, phi_solution, 0, 0, 1, 0);
+    MultiFab::Copy(plt, phi_exact, 0, 1, 1, 0);
+    MultiFab::Copy(plt, rhs_ptr, 0, 2, 1, 0);
 
-	
-	MultiFab::Copy(plt, phi_exact, 0, 3 ,1 ,0);
-	MultiFab::Subtract(plt,phi_solution,0,3,1,0);
+    // compute the error, "diff"
+    MultiFab::Copy(plt, phi_exact, 0, 3 ,1 ,0);
+    MultiFab::Subtract(plt,phi_solution,0,3,1,0);
 
-	MultiFab::Copy(plt,phi_solution, 0, 4, 1, 0);
-	MultiFab::Subtract(plt,rhs_ptr,0,4,1,0);
-	
-	
-
-
-        const std::string& pltfile = "plt";
-        WriteSingleLevelPlotfile(pltfile, plt, {"phi_solution", "phi_exact", "rhs_ptr", "diff", "residual"}, geom, 0., 0);
-   
+    const std::string& pltfile = "plt";
+    WriteSingleLevelPlotfile(pltfile, plt, {"phi_solution", "phi_exact", "rhs_ptr", "diff"}, geom, 0., 0);   
 
     // Call the timer again and compute the maximum difference between the start time and stop time
     //   over all processors
