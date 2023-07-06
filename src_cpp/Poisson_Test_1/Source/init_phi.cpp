@@ -12,16 +12,15 @@ void actual_init_phi (amrex::MultiFab& rhs_ptr, amrex::MultiFab& phi_exact, amre
 
     for (MFIter mfi(rhs_ptr); mfi.isValid(); ++mfi)
     {
-	    const Box& vbx = mfi.validbox();
-	    Array4<Real> const rhs = rhs_ptr.array(mfi);
-	    Array4<Real> const phi_e = phi_exact.array(mfi);
-	    amrex::ParallelFor(vbx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-			    {
-			       actual_init_phi(i, j, k, rhs, phi_e, dx, prob_lo);
-			    });
-     }
+        const Box& vbx = mfi.validbox();
+        Array4<Real> const rhs = rhs_ptr.array(mfi);
+        Array4<Real> const phi_e = phi_exact.array(mfi);
+        amrex::ParallelFor(vbx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+	{
+            actual_init_phi(i, j, k, rhs, phi_e, dx, prob_lo);
+        });
+    }
 
      phi_solution.setVal(0.0);
 
 }
-

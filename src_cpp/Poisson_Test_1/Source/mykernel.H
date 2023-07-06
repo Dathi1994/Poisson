@@ -17,9 +17,9 @@ void actual_init_phi (int i, int j, int k,
     Real x = prob_lo[0] + (i+Real(0.5)) * dx[0];
     Real y = prob_lo[1] + (j+Real(0.5)) * dx[1];
     
-    phi_e(i,j,0) = (std::cos(pi*x) * (std::cos(pi*y)));
+    phi_e(i,j,k) = (std::cos(pi*x) * (std::cos(pi*y)));
 
-    rhs(i,j,0) = -2.0 * pi * pi * (std::cos(pi*x) * (std::cos(pi*y)));
+    rhs(i,j,k) = -2.0 * pi * pi * (std::cos(pi*x) * (std::cos(pi*y)));
 
 }
 #endif
