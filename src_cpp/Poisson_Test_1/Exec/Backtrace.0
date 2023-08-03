@@ -1,0 +1,39 @@
+Host Name: angilas
+=== If no file names and line numbers are shown below, one can run
+            addr2line -Cpfie my_exefile my_line_address
+    to convert `my_line_address` (e.g., 0x4a6b) into file name and line number.
+    Or one can use amrex/Tools/Backtrace/parse_bt.py.
+
+=== Please note that the line number reported by addr2line may not be accurate.
+    One can use
+            readelf -wl my_exefile | grep my_line_address'
+    to find out the offset for that line.
+
+ 0: /home/trungle/amrvis2d.gnu.ex(+0x16da5d) [0x55aca4c9aa5d]
+    amrex::BLBackTrace::print_backtrace_info(_IO_FILE*) at /usr/include/x86_64-linux-gnu/bits/unistd.h:354
+ (inlined by) amrex::BLBackTrace::print_backtrace_info(_IO_FILE*) at /home/ajnonaka/Amrvis/../amrex/Src/Base/AMReX_BLBackTrace.cpp:199
+
+ 1: /home/trungle/amrvis2d.gnu.ex(+0x16f875) [0x55aca4c9c875]
+    amrex::BLBackTrace::handler(int) at /home/ajnonaka/Amrvis/../amrex/Src/Base/AMReX_BLBackTrace.cpp:99
+
+ 2: /lib/x86_64-linux-gnu/libc.so.6(+0x43090) [0x7f7b74486090]
+
+ 3: /lib/x86_64-linux-gnu/libc.so.6(__poll+0x17) [0x7f7b74555967]
+
+ 4: /lib/x86_64-linux-gnu/libXt.so.6(_XtWaitForSomething+0x47a) [0x7f7b74dd7e7a]
+    ?? ??:0
+
+ 5: /lib/x86_64-linux-gnu/libXt.so.6(XtAppProcessEvent+0x2c2) [0x7f7b74dd9632]
+    ?? ??:0
+
+ 6: /lib/x86_64-linux-gnu/libXt.so.6(XtAppMainLoop+0x2d) [0x7f7b74dcdd2d]
+    ?? ??:0
+
+ 7: /home/trungle/amrvis2d.gnu.ex(+0x1fa33) [0x55aca4b4ca33]
+    main at /home/ajnonaka/Amrvis/AmrVisTool.cpp:312
+
+ 8: /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf3) [0x7f7b74467083]
+
+ 9: /home/trungle/amrvis2d.gnu.ex(+0x239ee) [0x55aca4b509ee]
+    ?? ??:0
+

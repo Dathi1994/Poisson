@@ -7,12 +7,10 @@
 
 using namespace amrex;
 
-void advance (//MultiFab& phi_old,
-              //MultiFab& phi_new,
+void advance (
 	      amrex::MultiFab& phi_initial,
 	      amrex::MultiFab& rhs_ptr,
 	      amrex::MultiFab& phi_exact,
-              //Real dt,
               const Geometry& geom,
               const BoxArray& grids,
               const DistributionMapping& dmap,
@@ -46,7 +44,7 @@ void advance (//MultiFab& phi_old,
     MLABecLaplacian mlabec({geom}, {grids}, {dmap}, info);
 
     // order of stencil
-    int linop_maxorder = 2;
+    int linop_maxorder = 3;
     mlabec.setMaxOrder(linop_maxorder);
 
     // build array of boundary conditions needed by MLABecLaplacian
@@ -126,25 +124,28 @@ void advance (//MultiFab& phi_old,
 
 
     // build an MLMG solver
-   // MLMG mlmg(mlabec);
+   MLMG mlmg(mlabec);
 
     // set solver parameters
-    //int max_iter = 100;
-    //mlmg.setMaxIter(max_iter);
-    //int max_fmg_iter = 0;
-    //mlmg.setMaxFmgIter(max_fmg_iter);
-    //int verbose = 2;
-    //mlmg.setVerbose(verbose);
-    //int bottom_verbose = 0;
-    //mlmg.setBottomVerbose(bottom_verbose);
+    int max_iter = 10;
+    mlmg.setMaxIter(max_iter);
+
+    int max_fmg_iter = 0;
+    mlmg.setMaxFmgIter(max_fmg_iter);
+
+    int verbose = 2;
+    mlmg.setVerbose(verbose);
+
+    int bottom_verbose = 0;
+    mlmg.setBottomVerbose(bottom_verbose);
 
     // relative and absolute tolerances for linear solve
-    const Real tol_rel = 1.e-10;
+    const Real tol_rel = 1.0e-3;
     const Real tol_abs = 0.0;
 
     // Solve linear system
-   // mlmg.solve({&phi_new}, {&phi_old}, tol_rel, tol_abs);
+     mlmg.solve({&phi_initial}, {&rhs_ptr}, tol_rel, tol_abs);
       //Real solve({&phi_initial}, {&rhs_ptr}, tol_rel, tol_abs);
-      Real solve(amrex::MultiFab& phi_initial, amrex::MultiFab& rhs_ptr, Real tol_rel, Real tol_abs);
+    // Real solve(amrex::MultiFab& phi_initial, amrex::MultiFab& rhs_ptr, Real tol_rel, Real tol_abs);
 }
 

@@ -20,8 +20,8 @@ void actual_init_phi (int i, int j, int k,
     
     phi_exact(i,j,0) = (std::cos(pi*x) * (std::cos(pi*y)));
 
-    rhs_ptr(i,j,0) = 0.0; //-2.0 * pi * pi * (std::cos(pi*x) * (std::cos(pi*y)));
+    rhs_ptr(i,j,0) = -2.0 * pi * pi * (std::cos(pi*x) * (std::cos(pi*y)));
 
-   // phi_initial(i,j,0) = 0;
+    phi_initial(i,j,0) = 0;
 }
 #endif
