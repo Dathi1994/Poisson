@@ -1,8 +1,8 @@
 # Implicit time step is set to 10 * (explicit time step)
 nsteps = 100
 plot_int = 100
-n_cell = 2048 
-max_grid_size = 16 
+n_cell = 16 
+max_grid_size = 4 
 
 # 0 = periodic
 # 2 = homogeneous Neumann (zero flux)

@@ -23,7 +23,7 @@ void actual_init_phi (amrex::MultiFab& rhs_ptr, amrex::MultiFab& phi_exact, amre
 			    });
      }
 
-     phi_initial.setVal(0.0);
+    //phi_initial.setVal(0.0);
 
 }
 

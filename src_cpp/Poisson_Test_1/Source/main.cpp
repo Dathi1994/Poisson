@@ -160,7 +160,7 @@ void main_main ()
    // {
         // copying new solution into the old
         //MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
-	MultiFab::Copy(phi_initial, rhs_ptr, 0, 0, 1, 0);
+        //MultiFab::Copy(phi_initial, rhs_ptr, 0, 0, 1, 0);
 
         // new_phi = (I-dt)^{-1} * old_phi + dt
         //advance(phi_old, phi_new, dt, geom, ba, dm, bc);

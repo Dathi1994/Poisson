@@ -8,7 +8,7 @@
 using namespace amrex;
 
 void advance (
-	      amrex::MultiFab& phi_initial,
+	      amrex::MultiFab& phi_solution,
 	      amrex::MultiFab& rhs_ptr,
 	      amrex::MultiFab& phi_exact,
               const Geometry& geom,
@@ -30,11 +30,11 @@ void advance (
     // Fill the ghost cells of each grid from the other grids
     // includes periodic domain boundaries
    // phi_old.FillBoundary(geom.periodicity());
-      phi_initial.FillBoundary(geom.periodicity());
+      phi_solution.FillBoundary(geom.periodicity());
 
     // Fill non-periodic physical boundaries
     //FillDomainBoundary(phi_old, geom, bc);
-    FillDomainBoundary(phi_initial, geom, bc);
+    FillDomainBoundary(phi_solution, geom, bc);
 
     // assorment of solver and parallization options and parameters
     // see AMReX_MLLinOp.H for the defaults, accessors, and mutators
@@ -52,7 +52,7 @@ void advance (
     std::array<LinOpBCType,AMREX_SPACEDIM> bc_lo;
     std::array<LinOpBCType,AMREX_SPACEDIM> bc_hi;
 
-    for (int n = 0; n < phi_initial.nComp(); ++n)
+    for (int n = 0; n < phi_solution.nComp(); ++n)
     {
         for (int idim = 0; idim < AMREX_SPACEDIM; ++idim)
         {
@@ -91,7 +91,7 @@ void advance (
 
     // set the boundary conditions
     //mlabec.setLevelBC(0, &phi_old);
-    mlabec.setLevelBC(0, &phi_initial);
+    mlabec.setLevelBC(0, &phi_solution);
 
     // scaling factors
    // Real ascalar = 1.0;
@@ -127,7 +127,7 @@ void advance (
    MLMG mlmg(mlabec);
 
     // set solver parameters
-    int max_iter = 10;
+    int max_iter = 100;
     mlmg.setMaxIter(max_iter);
 
     int max_fmg_iter = 0;
@@ -144,7 +144,7 @@ void advance (
     const Real tol_abs = 0.0;
 
     // Solve linear system
-     mlmg.solve({&phi_initial}, {&rhs_ptr}, tol_rel, tol_abs);
+     mlmg.solve({&phi_solution}, {&rhs_ptr}, tol_rel, tol_abs);
       //Real solve({&phi_initial}, {&rhs_ptr}, tol_rel, tol_abs);
     // Real solve(amrex::MultiFab& phi_initial, amrex::MultiFab& rhs_ptr, Real tol_rel, Real tol_abs);
 }
